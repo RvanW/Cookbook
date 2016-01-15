@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MyRecipesFragment extends Fragment {
-    public MyRecipesFragment() {
+public class FavoritesFragment extends Fragment {
+    public FavoritesFragment() {
         // Required empty public constructor
     }
     View view;
@@ -34,14 +34,14 @@ public class MyRecipesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        view = inflater.inflate(R.layout.fragment_my_recipes, container, false);
-        getActivity().setTitle("My Recipes");
+        view = inflater.inflate(R.layout.fragment_gallery, container, false);
+        getActivity().setTitle("Favorites");
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
-        navigationView.getMenu().getItem(2).setChecked(true);
+        navigationView.getMenu().getItem(3).setChecked(true);
 
         // set the navigation icon in response
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-        Drawable nav_logo = getResources().getDrawable(R.drawable.book_open_variant, null);
+        Drawable nav_logo = getResources().getDrawable(R.drawable.heart, null);
         if (nav_logo != null) {
             int color = Color.parseColor("#FFFFFF"); //The color u want
             nav_logo.setTint(color);
@@ -66,24 +66,24 @@ public class MyRecipesFragment extends Fragment {
             try {
                 // Locate the class table named "Recipe" in Parse.com
                 ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
-                        "Recipe");
-                query.include("author");
-                query.whereEqualTo("author", user);
+                        "Favorites");
+                query.include("recipeId");
+                query.include("userId");
+                query.whereEqualTo("userId",user);
 //                // sort by rating
-                query.orderByDescending("rating");
+//                query.orderByAscending("rating");
 //                query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
                 parseObjectList = query.find();
-                for (ParseObject recipe : parseObjectList) {
-
+                for (ParseObject favorite : parseObjectList) {
+                    ParseObject recipePointer = (ParseObject) favorite.get("recipeId");
                     // use the parse object to create a java object
-                    ParseFile image = (ParseFile) recipe.getParseFile("image");
-
+                    ParseFile image = (ParseFile) recipePointer.getParseFile("image");
                     Recipe recipeItem = new Recipe();
-                    recipeItem.setId(recipe.getObjectId());
-                    recipeItem.setAuthor((ParseUser) recipe.get("author"));
-                    recipeItem.setTitle((String) recipe.get("title"));
-                    recipeItem.setDescription((String) recipe.get("description"));
-                    recipeItem.setRating((String) recipe.get("rating"));
+                    recipeItem.setId(recipePointer.getObjectId());
+                    recipeItem.setAuthor((ParseUser) recipePointer.get("author"));
+                    recipeItem.setTitle((String) recipePointer.get("title"));
+                    recipeItem.setDescription((String) recipePointer.get("description"));
+                    recipeItem.setRating((String) recipePointer.get("rating"));
                     recipeItem.setImageFile(image);
                     recipeList.add(recipeItem);
                 }

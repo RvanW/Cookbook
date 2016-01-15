@@ -18,13 +18,17 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <ImageButton
+            <ImageView
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageButton"
-                android:src="@drawable/emptyplate"
-                android:scaleType="fitCenter"
-                android:adjustViewBounds="true"/>
+                android:layout_height="200dp"
+                android:id="@+id/imageUpload"
+                android:src="@drawable/image_icon"
+                android:contextClickable="false"
+                android:clickable="false"
+                android:background="#eeeeee"
+                android:adjustViewBounds="false"
+                android:baselineAlignBottom="false"
+                android:scaleType="fitCenter" />
 
             <LinearLayout
                 android:orientation="horizontal"
@@ -44,7 +48,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/newTitel"
-                    android:layout_gravity="center_horizontal" />
+                    android:layout_gravity="center_horizontal"
+                    android:maxLines="1"
+                    android:maxLength="64" />
             </LinearLayout>
 
             <LinearLayout

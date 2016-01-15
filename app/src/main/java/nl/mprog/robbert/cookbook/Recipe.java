@@ -5,14 +5,23 @@ import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 
+import java.io.Serializable;
+
 /**
  * Created by Robbert on 10-1-2016.
  */
 @ParseClassName("Recipe")
-public class Recipe extends ParseObject {
+public class Recipe extends ParseObject implements Serializable {
 
     public Recipe() {
         // A default constructor is required.
+    }
+    public String getId() {
+        return getString("objectId");
+    }
+
+    public void setId(String id) {
+        put("objectId", id);
     }
 
     public String getTitle() {
@@ -52,7 +61,9 @@ public class Recipe extends ParseObject {
     }
 
     public void setImageFile(ParseFile file) {
-        put("image", file);
+        if (file != null) {
+            put("image", file);
+        }
     }
 
     public Boolean getPublic() { return getBoolean("public"); }
@@ -60,4 +71,5 @@ public class Recipe extends ParseObject {
     public void setPublic(Boolean bool) {
         put("public", bool);
     }
+
 }

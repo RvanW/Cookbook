@@ -1,11 +1,14 @@
 package nl.mprog.robbert.cookbook;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +43,14 @@ public class SignUpFragment extends Fragment implements View.OnClickListener {
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         for(int i = 0; i < 5; i++) {
             navigationView.getMenu().getItem(i).setChecked(false);
+        }
+        // set the navigation icon
+        Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        Drawable nav_logo = getResources().getDrawable(R.drawable.account_plus, null);
+        if (nav_logo != null) {
+            int color = Color.parseColor("#FFFFFF");
+            nav_logo.setTint(color);
+            toolbar.setLogo(nav_logo);
         }
         return view;
     }

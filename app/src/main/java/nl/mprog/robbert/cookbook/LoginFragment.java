@@ -1,15 +1,19 @@
 package nl.mprog.robbert.cookbook;
 
 
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +45,15 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         cancel.setOnClickListener(this);
         getActivity().setTitle("Log in");
 
+        // set the navigation icon
+        Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        Drawable nav_logo = getResources().getDrawable(R.drawable.account_key, null);
+        if (nav_logo != null) {
+            int color = Color.parseColor("#FFFFFF");
+            nav_logo.setTint(color);
+            toolbar.setLogo(nav_logo);
+        }
+
         return view;
     }
 
@@ -58,18 +71,26 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
     public void logIn() {
         EditText username = (EditText) view.findViewById(R.id.username);
         EditText password = (EditText) view.findViewById(R.id.password);
+        final LinearLayout loadingLayout = (LinearLayout) getActivity().findViewById(R.id.loading);
+        final LinearLayout loggedInLayout = (LinearLayout) getActivity().findViewById(R.id.loginLayout);
+        loadingLayout.setVisibility(View.VISIBLE);
+        loggedInLayout.setVisibility(View.GONE);
         ParseUser.logInInBackground(username.getText().toString(), password.getText()
                 .toString(), new LogInCallback() {
             @Override
             public void done(ParseUser user, ParseException e) {
+                loadingLayout.setVisibility(View.GONE);
                 if (e == null) {
                     Toast.makeText(getActivity(), "Done! Hello " + user.getUsername(), Toast.LENGTH_SHORT).show();
                     TextView username = (TextView) getActivity().findViewById(R.id.header_username);
+                    username.setText(ParseUser.getCurrentUser().getUsername());
+
                     FragmentManager fm = getActivity().getSupportFragmentManager();
                     fm.popBackStack();
                 }
                 else {
                     Toast.makeText(getActivity(),"Failed! " + e.getMessage(),Toast.LENGTH_SHORT).show();
+                    loggedInLayout.setVisibility(View.VISIBLE);
                 }
             }
         });

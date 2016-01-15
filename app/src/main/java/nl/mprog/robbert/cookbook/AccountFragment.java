@@ -1,19 +1,27 @@
 package nl.mprog.robbert.cookbook;
 
 
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.widget.Toolbar;
+import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.parse.LogInCallback;
+import com.parse.LogOutCallback;
+import com.parse.ParseException;
 import com.parse.ParseUser;
 
 
@@ -62,6 +70,16 @@ public class AccountFragment extends Fragment implements View.OnClickListener {
             navigationView.getMenu().getItem(i).setChecked(false);
 
         }
+
+        // set the navigation icon
+        Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        Drawable nav_logo = getResources().getDrawable(R.drawable.account, null);
+        if (nav_logo != null) {
+            int color = Color.parseColor("#FFFFFF");
+            nav_logo.setTint(color);
+            toolbar.setLogo(nav_logo);
+        }
+
         return view;
     }
 
@@ -94,15 +112,31 @@ public class AccountFragment extends Fragment implements View.OnClickListener {
     }
 
     private void logOut() {
-        ParseUser.logOut();
-        // Insert the fragment by replacing any existing fragment
-        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-        Fragment currentFragment = getActivity().getSupportFragmentManager().findFragmentById(R.id.frag_holder);
-        fragmentManager.beginTransaction()
-                .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
-                .detach(this)
-                .attach(this)
-                .commit();
+        final Fragment thisFragment = this;
+        final LinearLayout loadingLayout = (LinearLayout) getActivity().findViewById(R.id.loading);
+        final LinearLayout loggedInLayout = (LinearLayout) getActivity().findViewById(R.id.loggedIn);
+        loadingLayout.setVisibility(View.VISIBLE);
+        loggedInLayout.setVisibility(View.GONE);
+        ParseUser.logOutInBackground(new LogOutCallback() {
+            @Override
+            public void done(ParseException e) {
+                loadingLayout.setVisibility(View.GONE);
+                if (e == null) {
+                    // Reload this fragment by detaching and attaching itself
+                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                    fragmentManager.beginTransaction()
+                            .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
+                            .detach(thisFragment)
+                            .attach(thisFragment)
+                            .commit();
+                }
+                else {
+                    Toast.makeText(getActivity(),"Failed! " + e.getMessage(),Toast.LENGTH_SHORT).show();
+                    loggedInLayout.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
     }
 
 }
