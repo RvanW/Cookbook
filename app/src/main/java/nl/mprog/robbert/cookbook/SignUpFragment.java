@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.parse.Parse;
@@ -113,6 +114,12 @@ public class SignUpFragment extends Fragment implements View.OnClickListener {
                                 getActivity().getApplicationContext(),
                                 "Succes!",
                                 Toast.LENGTH_SHORT).show();
+                        TextView profileName = (TextView) getActivity().findViewById(R.id.header_username);
+                        profileName.setText(ParseUser.getCurrentUser().getUsername());
+
+                        // go back
+                        FragmentManager fm = getActivity().getSupportFragmentManager();
+                        fm.popBackStack();
                     }
                     else {
                         Toast.makeText(

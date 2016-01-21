@@ -6,12 +6,16 @@ import com.parse.ParseObject;
 import com.parse.ParseUser;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Robbert on 10-1-2016.
  */
 @ParseClassName("Recipe")
 public class Recipe extends ParseObject implements Serializable {
+
+    private boolean favorite;
 
     public Recipe() {
         // A default constructor is required.
@@ -72,4 +76,19 @@ public class Recipe extends ParseObject implements Serializable {
         put("public", bool);
     }
 
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(Boolean favorite) {
+        this.favorite = favorite;
+    }
+
+    public List<String> getIngredients(){
+        return getList("ingredients");
+    }
+    public void setIngredients(List<String> ingredientsList){
+        if (ingredientsList != null)
+            put("ingredients", ingredientsList);
+    }
 }

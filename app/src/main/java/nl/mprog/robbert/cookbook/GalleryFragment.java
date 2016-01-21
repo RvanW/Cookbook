@@ -14,9 +14,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
+import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
@@ -82,14 +84,22 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
 
     // This function gets the remote (online) data from parse.com and sets the adapter
     private class RemoteDataTask extends AsyncTask<Void,Void,Void> {
+        @Override
+        protected void onPreExecute() {
+            LinearLayout loadingLayout = (LinearLayout) view.findViewById(R.id.loading);
+            loadingLayout.setVisibility(View.VISIBLE);
+            super.onPreExecute();
+        }
 
         @Override
         protected Void doInBackground(Void... params) {
             if (recipeList == null) {
+
+                ParseUser current_user = ParseUser.getCurrentUser();
                 // Create the array
                 recipeList = new ArrayList<Recipe>();
                 try {
-                    // Locate the class table named "Country" in Parse.com
+                    // Locate the class table named "Recipe" in Parse.com
                     ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
                             "Recipe");
                     // only public recipes
@@ -99,7 +109,20 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
                     query.orderByDescending("rating");
 //                query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
                     parseObjectList = query.find();
-                    ParseObject.pinAllInBackground(parseObjectList);
+                    //ParseObject.pinAllInBackground(parseObjectList);
+
+                    // Also get the current user's favorites from parse
+                    ParseQuery<ParseObject> favorites_query = new ParseQuery<ParseObject>(
+                            "Favorites");
+                    favorites_query.include("recipeId");
+                    favorites_query.whereEqualTo("userId", current_user);
+                    List<ParseObject> favoriteList = favorites_query.find();
+                    ArrayList<String> favoriteIdList = new ArrayList<>();
+                    for (ParseObject favorite : favoriteList) {
+                        Recipe recipe = (Recipe) favorite.get("recipeId");
+                        favoriteIdList.add(recipe.getObjectId());
+                    }
+
                     for (ParseObject recipe : parseObjectList) {
                         // use the parse object to create a java object
                         ParseFile image = (ParseFile) recipe.getParseFile("image");
@@ -110,6 +133,9 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
                         recipeItem.setDescription((String) recipe.get("description"));
                         recipeItem.setRating((String) recipe.get("rating"));
                         recipeItem.setImageFile(image);
+                        recipeItem.setFavorite(favoriteIdList.contains(recipeItem.getId()));
+                        List<String> ingredientList = recipe.getList("ingredients");
+                        recipeItem.setIngredients(ingredientList);
                         recipeList.add(recipeItem);
                     }
                 } catch (ParseException e) {
@@ -120,8 +146,11 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
             return null;
 
         }
+
         @Override
         protected void onPostExecute(Void result) {
+            LinearLayout loadingLayout = (LinearLayout) view.findViewById(R.id.loading);
+            loadingLayout.setVisibility(View.GONE);
             // Locate the listview in listview_main.xml
             listview = (ListView) view.findViewById(R.id.listView);
             // Pass the results into ListViewAdapter.java

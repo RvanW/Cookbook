@@ -16,17 +16,49 @@
 
         <ImageView
             android:layout_width="fill_parent"
-            android:layout_height="300dp"
+            android:layout_height="200dp"
             android:id="@+id/detail_image"
             android:layout_weight="1"
-            android:scaleType="centerCrop" />
+            android:scaleType="fitCenter"
+            android:src="@drawable/image_icon" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="Detail title"
+                android:id="@+id/detail_title"
+                android:layout_gravity="center"
+                android:layout_margin="10dp" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView2"
+                android:src="@drawable/heart_outline"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="No description added"
+            android:id="@+id/detail_description"
+            android:layout_margin="10dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Detail title"
-            android:id="@+id/detail_title"
+            android:text="Ingredients"
+            android:id="@+id/ingredients_header"
             android:layout_gravity="center_horizontal"
             android:layout_margin="10dp" />
 
@@ -34,9 +66,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Description bla bla bla"
-            android:id="@+id/detail_description"
+            android:text="No ingredients were added"
+            android:id="@+id/detail_ingredients"
             android:layout_margin="10dp" />
+
     </LinearLayout>
 
 </ScrollView>

@@ -12,6 +12,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,6 +21,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,8 +33,13 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.inthecheesefactory.thecheeselibrary.fragment.support.v4.app.StatedFragment;
+import com.parse.GetDataCallback;
 import com.parse.ParseException;
+import com.parse.ParseFile;
+import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.parse.ParseImageView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,20 +47,67 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 
-public class AddRecipeFragment extends Fragment implements View.OnClickListener, View.OnTouchListener {
+
+public class AddRecipeFragment extends StatedFragment implements View.OnClickListener, View.OnTouchListener {
     private static final int SELECT_FILE = 1;
     private static final int REQUEST_CAMERA = 0;
-    private Recipe recipe;
+    private Recipe mRecipe;
+    ParseImageView imageView;
+    private ParseFile photo_parse_file = null;
+    View view;
 
     public AddRecipeFragment() {
-        recipe = new Recipe();
+        // required empty constructor
     }
 
-    ImageView imageView;
-    Bitmap current_photo = null;
-    View view;
+    public static AddRecipeFragment newInstance(Recipe recipe) {
+        Bundle args = new Bundle();
+        args.putSerializable("recipe",recipe);
+        AddRecipeFragment fragment = new AddRecipeFragment();
+        fragment.setArguments(args);
+        Log.d("AddRecipeFragment: ", "newInstance()");
+        return fragment;
+    }
+
+    @Override
+    protected void onSaveState(Bundle outState) {
+        super.onSaveState(outState);
+        outState.putSerializable("recipe", mRecipe);
+        Log.d("AddRecipeFragment: ", "onSaveState");
+    }
+
+    @Override
+    protected void onRestoreState(Bundle savedInstanceState) {
+        super.onRestoreState(savedInstanceState);
+        // For example:
+        mRecipe = (Recipe) savedInstanceState.getSerializable("recipe");
+        Log.d("AddRecipeFragment: ","onRestoreState");
+        if (mRecipe.getImageFile() != null) {
+            Log.d("AddRecipeFragment: ","Imagefile is not null!");
+            photo_parse_file = mRecipe.getImageFile();
+            imageView.setParseFile(photo_parse_file);
+            imageView.loadInBackground(new GetDataCallback() {
+                @Override
+                public void done(byte[] data, ParseException e) {
+                    imageView.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+    }
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            mRecipe = (Recipe) getArguments().getSerializable("recipe");
+            Log.d("AddRecipeFragment: ", "fragment arguments found");
+        }
+        Log.d("AddRecipeFragment: ", "OnCreate");
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -76,54 +130,71 @@ public class AddRecipeFragment extends Fragment implements View.OnClickListener,
             toolbar.setLogo(nav_logo);
         }
         //get the image view
-        imageView = (ImageView) view.findViewById(R.id.imageUpload);
-        if (current_photo != null) {
-            imageView.setImageBitmap(current_photo);
+        if (mRecipe != null) {
+            EditText title = (EditText) view.findViewById(R.id.newTitel);
+            title.setText(mRecipe.getTitle());
+            EditText description = (EditText) view.findViewById(R.id.newDescription);
+            description.setText(mRecipe.getDescription());
+            imageView = (ParseImageView) view.findViewById(R.id.imageUpload);
+            imageView.setParseFile(photo_parse_file);
+            imageView.loadInBackground(new GetDataCallback() {
+                @Override
+                public void done(byte[] data, ParseException e) {
+                    imageView.setVisibility(View.VISIBLE);
+                }
+            });
+
         }
         //set the ontouch listener so user may upload an image
         imageView.setOnTouchListener(this);
 
+        Log.d("AddRecipeFragment: ","OnCreateView");
         return view;
     }
-
 
     @Override
     public void onClick(View v) {
         EditText title = (EditText) view.findViewById(R.id.newTitel);
-        recipe.setTitle(title.getText().toString());
 
-        EditText description = (EditText) view.findViewById(R.id.newDescription);
-        recipe.setDescription(description.getText().toString());
+        if (!Objects.equals(title.getText().toString().trim(), "")) {
+            mRecipe.setTitle(title.getText().toString());
 
-        recipe.setRating("0");
+            EditText description = (EditText) view.findViewById(R.id.newDescription);
+            mRecipe.setDescription(description.getText().toString());
 
-        CheckBox savePublic = (CheckBox) view.findViewById(R.id.savePublic);
-        recipe.setPublic(savePublic.isChecked());
+            mRecipe.setRating("0");
 
-        // Save the recipe and return
-        recipe.saveEventually(new SaveCallback() {
+            CheckBox savePublic = (CheckBox) view.findViewById(R.id.savePublic);
+            mRecipe.setPublic(savePublic.isChecked());
+            mRecipe.setAuthor(ParseUser.getCurrentUser());
 
-            @Override
-            public void done(ParseException e) {
-                if (e == null) {
-                    Fragment fragment = new MyRecipesFragment();
-                    // Insert the fragment by replacing any existing fragment
-                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                    fragmentManager.beginTransaction()
-                            .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left)
-                            .replace(R.id.frag_holder, fragment)
-                            .commit();
+            // Save the recipe and return
+            mRecipe.saveEventually(new SaveCallback() {
 
-                } else {
-                    Toast.makeText(
-                            getActivity().getApplicationContext(),
-                            "Error saving: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                @Override
+                public void done(ParseException e) {
+                    if (e == null) {
+                        Fragment fragment = new MyRecipesFragment();
+                        // Insert the fragment by replacing any existing fragment
+                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        fragmentManager.beginTransaction()
+                                .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left)
+                                .replace(R.id.frag_holder, fragment)
+                                .commit();
+
+                    } else {
+                        Toast.makeText(
+                                getActivity().getApplicationContext(),
+                                "Error saving: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
-            }
 
-        });
-
+            });
+        }
+        else {
+            Toast.makeText(getActivity(),"Please fill in a valid title.",Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -182,31 +253,17 @@ public class AddRecipeFragment extends Fragment implements View.OnClickListener,
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         if (resultCode == MainActivity.RESULT_OK) {
             if (requestCode == REQUEST_CAMERA) {
                 Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
-                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
-                File destination = new File(Environment.getExternalStorageDirectory(),
-                        System.currentTimeMillis() + ".jpg");
-                FileOutputStream fo;
-                try {
-                    destination.createNewFile();
-                    fo = new FileOutputStream(destination);
-                    fo.write(bytes.toByteArray());
-                    fo.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                current_photo = thumbnail;
-                imageView.setImageBitmap(thumbnail);
+                photo_parse_file = conversionBitmapParseFile(thumbnail);
+                mRecipe.setImageFile(photo_parse_file);
             } else if (requestCode == SELECT_FILE) {
                 Uri selectedImageUri = data.getData();
-                String[] projection = { MediaStore.MediaColumns.DATA };
-                CursorLoader cursorLoader = new CursorLoader(getActivity(),selectedImageUri, projection, null, null, null);
-                Cursor cursor =cursorLoader.loadInBackground();
+                String[] projection = {MediaStore.MediaColumns.DATA};
+                CursorLoader cursorLoader = new CursorLoader(getActivity(), selectedImageUri, projection, null, null, null);
+                Cursor cursor = cursorLoader.loadInBackground();
                 int column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
                 cursor.moveToFirst();
                 String selectedImagePath = cursor.getString(column_index);
@@ -222,9 +279,49 @@ public class AddRecipeFragment extends Fragment implements View.OnClickListener,
                 options.inSampleSize = scale;
                 options.inJustDecodeBounds = false;
                 bm = BitmapFactory.decodeFile(selectedImagePath, options);
-                current_photo = bm;
-                imageView.setImageBitmap(bm);
+                photo_parse_file = conversionBitmapParseFile(bm);
+            }
+            if (photo_parse_file != null) {
+                photo_parse_file.saveInBackground(new SaveCallback() {
+
+                    public void done(ParseException e) {
+                        if (e != null) {
+                            Toast.makeText(getActivity(),
+                                    "Error saving image: " + e.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getActivity(),
+                                    "Succes!",
+                                    Toast.LENGTH_SHORT).show();
+                            mRecipe.setImageFile(photo_parse_file);
+                        }
+                    }
+                });
+                imageView.setParseFile(photo_parse_file);
+                imageView.loadInBackground(new GetDataCallback() {
+                    @Override
+                    public void done(byte[] data, ParseException e) {
+                        imageView.setVisibility(View.VISIBLE);
+                    }
+                });
             }
         }
+    }
+
+
+
+//    // convert from bitmap to byte array
+//    public byte[] getBytesFromBitmap(Bitmap bitmap) {
+//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//        bitmap.compress(CompressFormat.JPEG, 70, stream);
+//        return stream.toByteArray();
+//    }
+
+    // convert bitmap to Parse file.
+    public ParseFile conversionBitmapParseFile(Bitmap imageBitmap){
+        ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
+        imageBitmap.compress(Bitmap.CompressFormat.PNG,100,byteArrayOutputStream);
+        byte[] imageByte = byteArrayOutputStream.toByteArray();
+        return new ParseFile("recipe_image.png",imageByte);
     }
 }

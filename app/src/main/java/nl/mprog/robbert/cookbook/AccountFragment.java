@@ -122,6 +122,8 @@ public class AccountFragment extends Fragment implements View.OnClickListener {
             public void done(ParseException e) {
                 loadingLayout.setVisibility(View.GONE);
                 if (e == null) {
+                    TextView profileName = (TextView) getActivity().findViewById(R.id.header_username);
+                    profileName.setText("Logged out");
                     // Reload this fragment by detaching and attaching itself
                     FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                     fragmentManager.beginTransaction()
@@ -129,6 +131,7 @@ public class AccountFragment extends Fragment implements View.OnClickListener {
                             .detach(thisFragment)
                             .attach(thisFragment)
                             .commit();
+
                 }
                 else {
                     Toast.makeText(getActivity(),"Failed! " + e.getMessage(),Toast.LENGTH_SHORT).show();

@@ -82,9 +82,10 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                 loadingLayout.setVisibility(View.GONE);
                 if (e == null) {
                     Toast.makeText(getActivity(), "Done! Hello " + user.getUsername(), Toast.LENGTH_SHORT).show();
-                    TextView username = (TextView) getActivity().findViewById(R.id.header_username);
-                    username.setText(ParseUser.getCurrentUser().getUsername());
+                    TextView profileName = (TextView) getActivity().findViewById(R.id.header_username);
+                    profileName.setText(ParseUser.getCurrentUser().getUsername());
 
+                    // go back
                     FragmentManager fm = getActivity().getSupportFragmentManager();
                     fm.popBackStack();
                 }

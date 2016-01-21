@@ -5,8 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -15,6 +20,10 @@ import android.widget.TextView;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseUser;
+
+import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -43,6 +52,37 @@ public class DetailsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mRecipe = (Recipe) getArguments().getSerializable("recipe");
+            if (ParseUser.getCurrentUser() != null && mRecipe != null) {
+                if (ParseUser.getCurrentUser()== mRecipe.getAuthor()) {
+                    // enable the edit recipe button if the current user owns this recipe.
+                    setHasOptionsMenu(true);
+                }
+            }
+        }
+
+    }
+
+    @Override
+    public void onCreateOptionsMenu(
+            Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.fragment_itemdetail, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // handle item selection
+        switch (item.getItemId()) {
+            case R.id.edit_item:
+                Fragment fragment = AddRecipeFragment.newInstance(mRecipe);
+                FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                fragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                        .replace(R.id.frag_holder, fragment, "edit_recipe")
+                        .addToBackStack("edit_recipe")
+                        .commit();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -57,7 +97,17 @@ public class DetailsFragment extends Fragment {
             TextView description = (TextView) view.findViewById(R.id.detail_description);
             description.setText(mRecipe.getDescription());
             ImageView image = (ImageView) view.findViewById(R.id.detail_image);
-            displayImage(mRecipe.getImageFile(),image);
+            displayImage(mRecipe.getImageFile(), image);
+            if (mRecipe.getIngredients() != null) {
+                String htmlString = "";
+                for (String ingredient : mRecipe.getIngredients()) {
+                    htmlString += "&#8226;    " + ingredient + "<br/>";
+                }
+                if (!Objects.equals(htmlString, "")) {
+                    TextView ingredients = (TextView) view.findViewById(R.id.detail_ingredients);
+                    ingredients.setText(Html.fromHtml(htmlString));
+                }
+            }
         }
         return view;
     }
@@ -69,7 +119,6 @@ public class DetailsFragment extends Fragment {
 
                 @Override
                 public void done(byte[] data, ParseException e) {
-
                     if (e == null) {
                         Bitmap bmp = BitmapFactory.decodeByteArray(data, 0,
                                 data.length);
@@ -82,23 +131,17 @@ public class DetailsFragment extends Fragment {
                             // (display.getWidth() /50), false));
                             img.setImageBitmap(bmp);
                             // img.setPadding(10, 10, 0, 0);
-
-
-
                         }
                     } else {
                         Log.e("img download failed! ", e.getMessage());
                     }
-
                 }
             });
         } else {
-
             Log.e("parse file", " null");
-
-            // img.setImageResource(R.drawable.ic_launcher);
-
+            img.setImageResource(R.drawable.image_icon);
             img.setPadding(10, 10, 10, 10);
+
         }
 
     }

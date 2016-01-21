@@ -7,11 +7,14 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
@@ -25,11 +28,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class FavoritesFragment extends Fragment {
+public class FavoritesFragment extends Fragment implements AdapterView.OnItemClickListener {
     public FavoritesFragment() {
         // Required empty public constructor
     }
     View view;
+    Fragment thisFragment = this;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -58,7 +63,27 @@ public class FavoritesFragment extends Fragment {
     List<ParseObject> parseObjectList;
     ListView listview;
     ListAdapter adapter;
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Recipe clickedRecipe = recipeList.get(position);
+        DetailsFragment fragment = DetailsFragment.newInstance(clickedRecipe);
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
+                .replace(R.id.frag_holder, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
     private class RemoteDataTask extends AsyncTask<Void,Void,Void> {
+        @Override
+        protected void onPreExecute() {
+            LinearLayout loadingLayout = (LinearLayout) view.findViewById(R.id.loading);
+            loadingLayout.setVisibility(View.VISIBLE);
+            super.onPreExecute();
+        }
         ParseObject user = ParseUser.getCurrentUser();
         protected Void doInBackground(Void... params) {
             // Create the array
@@ -85,6 +110,9 @@ public class FavoritesFragment extends Fragment {
                     recipeItem.setDescription((String) recipePointer.get("description"));
                     recipeItem.setRating((String) recipePointer.get("rating"));
                     recipeItem.setImageFile(image);
+                    recipeItem.setFavorite(true);
+                    List<String> ingredientList = recipeItem.getList("ingredients");
+                    recipeItem.setIngredients(ingredientList);
                     recipeList.add(recipeItem);
                 }
             } catch (ParseException e) {
@@ -96,6 +124,8 @@ public class FavoritesFragment extends Fragment {
         }
         @Override
         protected void onPostExecute(Void result) {
+            LinearLayout loadingLayout = (LinearLayout) view.findViewById(R.id.loading);
+            loadingLayout.setVisibility(View.GONE);
             // Locate the listview in listview_main.xml
             listview = (ListView) getActivity().findViewById(R.id.listView);
             // Pass the results into ListViewAdapter.java
@@ -103,8 +133,8 @@ public class FavoritesFragment extends Fragment {
                     recipeList);
             // Binds the Adapter to the ListView
             listview.setAdapter(adapter);
-            // Close the progressdialog
-//            mProgressDialog.dismiss();
+            // set the onclick listener
+            listview.setOnItemClickListener((AdapterView.OnItemClickListener) thisFragment);
         }
     }
 

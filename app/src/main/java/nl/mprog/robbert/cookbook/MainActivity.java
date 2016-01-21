@@ -1,8 +1,12 @@
 package nl.mprog.robbert.cookbook;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,6 +18,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.parse.ParseFile;
 import com.parse.ParseUser;
 
 public class MainActivity extends AppCompatActivity
@@ -21,11 +26,15 @@ public class MainActivity extends AppCompatActivity
 
     public NavigationView navigationView;
     public GalleryFragment galleryFragment;
+    public AddRecipeFragment addRecipeFragment;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.d("MainActivity: ", "onCreate");
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -46,15 +55,19 @@ public class MainActivity extends AppCompatActivity
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
         if (savedInstanceState == null) {
             // load initial fragment (gallery) if there is none loaded yet
             Fragment fragment = new GalleryFragment();
             FragmentManager manager = getSupportFragmentManager();
             manager.beginTransaction().replace(R.id.frag_holder, fragment).commit();
+
+            TextView profileName = (TextView) findViewById(R.id.header_username);
             if (ParseUser.getCurrentUser() != null) {
-                Toast.makeText(this, "Welcome back " + ParseUser.getCurrentUser().getUsername(), Toast.LENGTH_SHORT).show();
-                TextView profileName = (TextView) findViewById(R.id.header_username);
                 profileName.setText(ParseUser.getCurrentUser().getUsername());
+            }
+            else {
+                profileName.setText("Logged out");
             }
         }
 
@@ -71,41 +84,49 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ParseUser current_user = ParseUser.getCurrentUser();
         // Create a new fragment based on navigation selection
         Fragment fragment = null;
+        String TAG = "";
         if (id == R.id.nav_gallery) {
-            if(this.galleryFragment == null) {
-                galleryFragment = new GalleryFragment();
-            }
+            galleryFragment = new GalleryFragment();
             fragment = galleryFragment;
+            TAG = "gallery";
         }
-        else if (current_user == null) { // send user to account panel if they chose anything besides gallery..
+        else if (ParseUser.getCurrentUser() == null) { // send user to account panel if they chose anything besides the public gallery..
             fragment = new AccountFragment();
+            TAG = "account";
+            if (id != R.id.nav_account)
+                Toast.makeText(this,"Please login or sign up first to use this feature",Toast.LENGTH_SHORT).show();
         }
         else if (id == R.id.nav_camera) {
-            fragment = new AddRecipeFragment();
+            addRecipeFragment = AddRecipeFragment.newInstance(new Recipe());
+            fragment = addRecipeFragment;
+            TAG = "new_recipe";
         } else if (id == R.id.nav_myrecipes) {
             fragment = new MyRecipesFragment();
+            TAG = "my_recipes";
         } else if (id == R.id.nav_favorites) {
             fragment = new FavoritesFragment();
+            TAG = "favorites";
         } else if (id == R.id.nav_account) {
             fragment = new AccountFragment();
+            TAG = "account";
         }
 
         if (fragment != null) {
             // Insert the fragment by replacing any existing fragment
             FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
-                    .replace(R.id.frag_holder, fragment)
-                    .addToBackStack(null)
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                    .replace(R.id.frag_holder, fragment, TAG)
+                    .addToBackStack(TAG)
                     .commit();
         }
 
@@ -123,4 +144,13 @@ public class MainActivity extends AppCompatActivity
             return false;
         }
     }
+
+    // check if there's internet available
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        return ni != null;
+    }
 }
+
