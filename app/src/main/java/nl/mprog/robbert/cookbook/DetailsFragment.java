@@ -14,13 +14,25 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.ToggleButton;
 
+import com.parse.DeleteCallback;
+import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseImageView;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,10 +42,13 @@ import java.util.Objects;
  * A simple {@link Fragment} subclass.
  */
 
-public class DetailsFragment extends Fragment {
+public class DetailsFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
     View view;
     Recipe mRecipe = null;
+    Recipe online_recipe;
+    ParseUser mUser = null;
+    ParseObject current_user_rating = null;
 
     public DetailsFragment() {
         // required empty constructor
@@ -52,11 +67,45 @@ public class DetailsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mRecipe = (Recipe) getArguments().getSerializable("recipe");
-            if (ParseUser.getCurrentUser() != null && mRecipe != null) {
-                if (ParseUser.getCurrentUser()== mRecipe.getAuthor()) {
+            mUser = ParseUser.getCurrentUser();
+            ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+                    "Recipe");
+            query.whereEqualTo("objectId",mRecipe.getObjectId());
+            try {
+                mRecipe = (Recipe) query.getFirst();
+                Log.e("Found recipe",mRecipe.getTitle());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+//            query.getFirstInBackground(new GetCallback<ParseObject>() {
+//                @Override
+//                public void done(ParseObject object, ParseException e) {
+//                    if (e == null) {
+//                        mRecipe = (Recipe) object;
+//                        Log.d("EditRecipeFragment", "Found recipe");
+//                    } else {
+//                        Log.d("EditRecipeFragment", e.getMessage());
+//                    }
+//                }
+//            });
+
+            if (mUser != null && mRecipe != null) {
+                if (mUser == mRecipe.getAuthor()) {
                     // enable the edit recipe button if the current user owns this recipe.
                     setHasOptionsMenu(true);
                 }
+
+
+                ParseQuery<ParseObject> rating_query = new ParseQuery<ParseObject>(
+                        "Rating");
+                rating_query.whereEqualTo("userId",ParseUser.getCurrentUser());
+                rating_query.whereEqualTo("recipeId", mRecipe);
+                try {
+                    current_user_rating = rating_query.getFirst();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
             }
         }
 
@@ -91,58 +140,160 @@ public class DetailsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_details, container, false);
+        getActivity().setTitle("Details");
         if (mRecipe != null) {
             TextView title = (TextView) view.findViewById(R.id.detail_title);
             title.setText(mRecipe.getTitle());
             TextView description = (TextView) view.findViewById(R.id.detail_description);
             description.setText(mRecipe.getDescription());
-            ImageView image = (ImageView) view.findViewById(R.id.detail_image);
-            displayImage(mRecipe.getImageFile(), image);
+
+            // check if this recipe is a user's favorite
+            ToggleButton toggleButton = (ToggleButton) view.findViewById(R.id.toggle_favorite);
+            toggleButton.setChecked(mRecipe.isFavorite());
+            toggleButton.setOnCheckedChangeListener(this);
+
+            // check if this recipe has been rated by user;
+
+            Button rateButton = (Button) view.findViewById(R.id.rateButton);
+            rateButton.setOnClickListener(this);
+
+            // check if there's an image to load
+            if (mRecipe.getImageFile() != null) {
+                final ParseImageView image = (ParseImageView) view.findViewById(R.id.detail_image);
+                image.setParseFile(mRecipe.getImageFile());
+                image.loadInBackground(new GetDataCallback() {
+                    @Override
+                    public void done(byte[] data, ParseException e) {
+                        image.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
+            // check if there are ingredients to be listed
             if (mRecipe.getIngredients() != null) {
                 String htmlString = "";
                 for (String ingredient : mRecipe.getIngredients()) {
-                    htmlString += "&#8226;    " + ingredient + "<br/>";
+                    htmlString += "&#8226;" + ingredient + "<br/>";
                 }
                 if (!Objects.equals(htmlString, "")) {
                     TextView ingredients = (TextView) view.findViewById(R.id.detail_ingredients);
                     ingredients.setText(Html.fromHtml(htmlString));
                 }
             }
+
+            if (mRecipe.getAvg_Rating() != null) {
+                TextView ratingText = (TextView) view.findViewById(R.id.detail_rating);
+                ratingText.setText(String.valueOf(mRecipe.getAvg_Rating()));
+                TextView amountOfRatingsText = (TextView) view.findViewById(R.id.detail_ratings_amount);
+                amountOfRatingsText.setText("by " + String.valueOf(mRecipe.get("numberOfRatings")) + " users");
+            }
+
+            if (current_user_rating != null) {
+                RatingBar ratingBar = (RatingBar) view.findViewById(R.id.ratingBar);
+                ratingBar.setRating(current_user_rating.getNumber("rating").floatValue());
+            }
+
         }
         return view;
     }
 
-    private void displayImage(ParseFile thumbnail, final ImageView img) {
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if (mUser != null) {
+            if (isChecked) {
+                ParseObject favorite = new ParseObject("Favorites");
+                favorite.put("userId", ParseUser.getCurrentUser());
+                favorite.put("recipeId", mRecipe);
 
-        if (thumbnail != null) {
-            thumbnail.getDataInBackground(new GetDataCallback() {
-
-                @Override
-                public void done(byte[] data, ParseException e) {
-                    if (e == null) {
-                        Bitmap bmp = BitmapFactory.decodeByteArray(data, 0,
-                                data.length);
-
-                        if (bmp != null) {
-
-                            Log.e("parse file ok", "");
-                            // img.setImageBitmap(Bitmap.createScaledBitmap(bmp,
-                            // (display.getWidth() / 5),
-                            // (display.getWidth() /50), false));
-                            img.setImageBitmap(bmp);
-                            // img.setPadding(10, 10, 0, 0);
+                favorite.saveInBackground(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        if (e != null) {
+                            Log.d("Error: ", e.getMessage());
+                        } else {
+                            mRecipe.setFavorite(true);
                         }
-                    } else {
-                        Log.e("img download failed! ", e.getMessage());
                     }
+                });
+
+            } else {
+                // Delete the current user's favorites from parse
+                ParseQuery<ParseObject> favorites_query = new ParseQuery<ParseObject>(
+                        "Favorites");
+                favorites_query.include("userId");
+                favorites_query.include("recipeId");
+                favorites_query.whereEqualTo("userId", ParseUser.getCurrentUser());
+                favorites_query.whereEqualTo("recipeId", mRecipe);
+                try {
+                    ParseObject favorite = favorites_query.getFirst();
+                    favorite.deleteInBackground(new DeleteCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            if (e != null) {
+                                e.printStackTrace();
+                            } else {
+                                mRecipe.setFavorite(false);
+                            }
+
+                        }
+                    });
+
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-            });
+            }
         } else {
-            Log.e("parse file", " null");
-            img.setImageResource(R.drawable.image_icon);
-            img.setPadding(10, 10, 10, 10);
-
+            Toast.makeText(getActivity(), "Please login or sign up to add favorites", Toast.LENGTH_SHORT).show();
+            buttonView.setChecked(false);
         }
+    }
 
+    @Override
+    public void onClick(View v) {
+        if (mUser == null) {
+            Toast.makeText(getActivity(),"Create an account or log in to give ratings",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        RatingBar ratingBar = (RatingBar) getActivity().findViewById(R.id.ratingBar);
+        final Number rating = ratingBar.getRating();
+        Number last_rating = 0;
+        if (current_user_rating != null) { // if the user rated this item before..
+            last_rating = current_user_rating.getNumber("rating");
+        }
+        else {
+            mRecipe.increment("numberOfRatings");
+            current_user_rating = new ParseObject("Rating");
+        }
+        final Number final_last_rating = last_rating;
+
+        current_user_rating.put("rating", rating);
+        current_user_rating.put("recipeId", mRecipe);
+        current_user_rating.put("userId", mUser);
+        current_user_rating.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e != null) {
+                    Log.e("error saving rating", e.getMessage());
+                } else {
+
+                }
+            }
+        });
+        Log.e("Rating",rating + "," + final_last_rating);
+        mRecipe.increment("totalRating", rating.floatValue() - final_last_rating.floatValue());
+        mRecipe.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e != null) {
+                    Log.e("error saving recipe", e.getMessage());
+                }
+                else {
+                    Toast.makeText(getActivity(),"Thanks, your rating has been updated",Toast.LENGTH_SHORT).show();
+                }
+                TextView ratingTv = (TextView) view.findViewById(R.id.detail_rating);
+                ratingTv.setText(String.valueOf(mRecipe.getAvg_Rating()));
+                TextView amountOfRatingsText = (TextView) view.findViewById(R.id.detail_ratings_amount);
+                amountOfRatingsText.setText("by " + String.valueOf(mRecipe.get("numberOfRatings")) + " users");
+            }
+        });
     }
 }

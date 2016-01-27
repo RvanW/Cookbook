@@ -1,6 +1,8 @@
 package nl.mprog.robbert.cookbook;
 
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -38,7 +40,15 @@ public class MyRecipesFragment extends Fragment implements AdapterView.OnItemCli
     ListView listview;
     ListAdapter adapter;
     Fragment thisFragment = this;
+
     View view;
+    Activity myActivity;
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        myActivity = (Activity) context;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -93,15 +103,8 @@ public class MyRecipesFragment extends Fragment implements AdapterView.OnItemCli
             recipeList = new ArrayList<Recipe>();
             ParseObject user = ParseUser.getCurrentUser();
             try {
-                // Locate the class table named "Recipe" in Parse.com
-                ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
-                        "Recipe");
-                query.include("author");
-                query.whereEqualTo("author", user);
-//                // sort by rating
-                query.orderByDescending("rating");
 
-                // Also get the current user's favorites from parse
+                // Get the current user's favorites from parse
                 ParseQuery<ParseObject> favorites_query = new ParseQuery<ParseObject>(
                         "Favorites");
                 favorites_query.include("recipeId");
@@ -110,27 +113,24 @@ public class MyRecipesFragment extends Fragment implements AdapterView.OnItemCli
                 ArrayList<String> favoriteIdList = new ArrayList<>();
                 for (ParseObject favorite : favoriteList) {
                     Recipe recipe = (Recipe) favorite.get("recipeId");
-                    favoriteIdList.add(recipe.getObjectId());
+                    if (recipe != null) {
+                        favoriteIdList.add(recipe.getId());
+                    }
                 }
 
-//                query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
+                // Locate the class table named "Recipe" in Parse.com
+                ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+                        "Recipe");
+                query.include("author");
+                query.whereEqualTo("author", user);
+                // sort by rating
+                query.orderByDescending("rating");
+
                 parseObjectList = query.find();
-                for (ParseObject recipe : parseObjectList) {
-
-                    // use the parse object to create a java object
-                    ParseFile image = (ParseFile) recipe.getParseFile("image");
-                    Recipe recipeItem = new Recipe();
-                    recipeItem.setId(recipe.getObjectId());
-                    recipeItem.setAuthor((ParseUser) recipe.get("author"));
-                    recipeItem.setTitle((String) recipe.get("title"));
-                    recipeItem.setDescription((String) recipe.get("description"));
-                    recipeItem.setRating((String) recipe.get("rating"));
-                    recipeItem.setImageFile(image);
-                    recipeItem.setFavorite(favoriteIdList.contains(recipeItem.getId()));
-                    List<String> ingredientList = recipe.getList("ingredients");
-                    recipeItem.setIngredients(ingredientList);
-
-                    recipeList.add(recipeItem);
+                for (ParseObject recipeObject : parseObjectList) {
+                    Recipe recipe = (Recipe) recipeObject;
+                    recipe.setFavorite(favoriteIdList.contains(recipeObject.getObjectId()));
+                    recipeList.add(recipe);
                 }
             } catch (ParseException e) {
                 Log.e("Error", e.getMessage());
@@ -145,9 +145,9 @@ public class MyRecipesFragment extends Fragment implements AdapterView.OnItemCli
             LinearLayout loadingLayout = (LinearLayout) view.findViewById(R.id.loading);
             loadingLayout.setVisibility(View.GONE);
             // Locate the listview in listview_main.xml
-            listview = (ListView) getActivity().findViewById(R.id.listView);
+            listview = (ListView) view.findViewById(R.id.listView);
             // Pass the results into ListViewAdapter.java
-            adapter = new ListViewAdapter(getActivity(),R.layout.list_item_style,
+            adapter = new ListViewAdapter(myActivity,R.layout.list_item_style,
                     recipeList);
             // Binds the Adapter to the ListView
             listview.setAdapter(adapter);

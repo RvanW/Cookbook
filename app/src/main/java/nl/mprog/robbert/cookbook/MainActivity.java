@@ -34,7 +34,6 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Log.d("MainActivity: ", "onCreate");
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -62,13 +61,13 @@ public class MainActivity extends AppCompatActivity
             FragmentManager manager = getSupportFragmentManager();
             manager.beginTransaction().replace(R.id.frag_holder, fragment).commit();
 
-            TextView profileName = (TextView) findViewById(R.id.header_username);
-            if (ParseUser.getCurrentUser() != null) {
-                profileName.setText(ParseUser.getCurrentUser().getUsername());
-            }
-            else {
-                profileName.setText("Logged out");
-            }
+        }
+        TextView profileName = (TextView) findViewById(R.id.header_username);
+        if (ParseUser.getCurrentUser() != null) {
+            profileName.setText(ParseUser.getCurrentUser().getUsername());
+        }
+        else {
+            profileName.setText("Logged out");
         }
 
     }

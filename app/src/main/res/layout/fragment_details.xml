@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:weightSum="2">
 
-        <ImageView
+        <com.parse.ParseImageView
             android:layout_width="fill_parent"
             android:layout_height="200dp"
             android:id="@+id/detail_image"
@@ -26,7 +26,8 @@
             android:orientation="horizontal"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal">
+            android:gravity="center_horizontal"
+            android:weightSum="1">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -35,14 +36,24 @@
                 android:text="Detail title"
                 android:id="@+id/detail_title"
                 android:layout_gravity="center"
-                android:layout_margin="10dp" />
+                android:layout_margin="10dp"
+                android:layout_weight="1" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageView2"
-                android:src="@drawable/heart_outline"
-                android:layout_gravity="center_vertical" />
+            <ToggleButton
+                android:id="@+id/toggle_favorite"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/favorite_toggle"
+
+                android:textOn=""
+                android:textOff=""
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:layout_centerVertical="true"
+                style="?android:attr/borderlessButtonStyle"
+                android:checked="false"
+                android:layout_gravity="center_vertical"
+                android:layout_marginRight="10dp" />
         </LinearLayout>
 
         <TextView
@@ -59,7 +70,6 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Ingredients"
             android:id="@+id/ingredients_header"
-            android:layout_gravity="center_horizontal"
             android:layout_margin="10dp" />
 
         <TextView
@@ -69,6 +79,126 @@
             android:text="No ingredients were added"
             android:id="@+id/detail_ingredients"
             android:layout_margin="10dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Rating"
+            android:id="@+id/textView12"
+            android:layout_margin="10dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/ratingLayout">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Your rating:"
+                android:id="@+id/textView11"
+                android:layout_margin="10dp"
+                android:layout_gravity="center_vertical" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal">
+
+                <RatingBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/ratingBar"
+                    style="@style/foodRatingBar"
+                    android:layout_gravity="center" />
+            </LinearLayout>
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rate"
+                android:id="@+id/rateButton"
+                android:layout_marginRight="10dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Average rating"
+                    android:id="@+id/textView4"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="by 0 users"
+                    android:id="@+id/detail_ratings_amount"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp" />
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:gravity="center_horizontal">
+
+                <ImageView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:id="@+id/cookiexl"
+                    android:src="@drawable/cookie_xl"
+                    android:layout_gravity="center_horizontal" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.0"
+                    android:id="@+id/detail_rating"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:layout_alignLeft="@+id/cookiexl"
+                    android:layout_alignTop="@+id/cookiexl"
+                    android:layout_alignRight="@+id/cookiexl"
+                    android:layout_alignBottom="@+id/cookiexl"
+                    android:gravity="center"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:typeface="normal"
+                    android:textStyle="bold"
+                    android:textColor="#ffffff"
+                    android:textSize="26sp"
+                    android:shadowColor="#424242"
+                    android:shadowDx="1"
+                    android:shadowDy="1" />
+            </RelativeLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 

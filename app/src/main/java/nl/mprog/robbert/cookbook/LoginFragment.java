@@ -69,13 +69,15 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
     }
 
     public void logIn() {
-        EditText username = (EditText) view.findViewById(R.id.username);
+        EditText username_et = (EditText) view.findViewById(R.id.username);
+        String username = username_et.getText().toString().trim();
+        String username_cap = username.substring(0,1).toUpperCase() + username.substring(1).toLowerCase();
         EditText password = (EditText) view.findViewById(R.id.password);
         final LinearLayout loadingLayout = (LinearLayout) getActivity().findViewById(R.id.loading);
         final LinearLayout loggedInLayout = (LinearLayout) getActivity().findViewById(R.id.loginLayout);
         loadingLayout.setVisibility(View.VISIBLE);
         loggedInLayout.setVisibility(View.GONE);
-        ParseUser.logInInBackground(username.getText().toString(), password.getText()
+        ParseUser.logInInBackground(username_cap, password.getText()
                 .toString(), new LogInCallback() {
             @Override
             public void done(ParseUser user, ParseException e) {

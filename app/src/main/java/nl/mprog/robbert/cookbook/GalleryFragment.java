@@ -1,6 +1,8 @@
 package nl.mprog.robbert.cookbook;
 
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -8,6 +10,7 @@ import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,6 +22,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import com.parse.GetCallback;
+import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
@@ -26,6 +30,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -43,18 +48,25 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
         // Required empty public constructor
     }
 
+    Activity myActivity;
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        myActivity = (Activity) context;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_gallery, container, false);
 
-        getActivity().setTitle("Gallery");
-        NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
+        myActivity.setTitle("Gallery");
+        NavigationView navigationView = (NavigationView) myActivity.findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(0).setChecked(true);
 
         // set the navigation icon in response
-        Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) myActivity.findViewById(R.id.toolbar);
         Drawable nav_logo = getResources().getDrawable(R.drawable.ic_menu_gallery, null);
         if (nav_logo != null) {
             int color = Color.parseColor("#FFFFFF"); //The color u want
@@ -93,55 +105,49 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
 
         @Override
         protected Void doInBackground(Void... params) {
-            if (recipeList == null) {
 
-                ParseUser current_user = ParseUser.getCurrentUser();
-                // Create the array
-                recipeList = new ArrayList<Recipe>();
-                try {
-                    // Locate the class table named "Recipe" in Parse.com
-                    ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
-                            "Recipe");
-                    // only public recipes
-                    query.whereEqualTo("public", true);
-                    query.include("author");
-                    // sort by rating
-                    query.orderByDescending("rating");
+            ParseUser current_user = ParseUser.getCurrentUser();
+            // Create the array
+            recipeList = new ArrayList<Recipe>();
+            try {
+                // Locate the class table named "Recipe" in Parse.com
+                ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+                        "Recipe");
+                // only public recipes
+                query.whereEqualTo("public", true);
+                query.include("author");
+                // sort by number of ratings
+                query.orderByDescending("numberOfRatings");
 //                query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
-                    parseObjectList = query.find();
-                    //ParseObject.pinAllInBackground(parseObjectList);
+                parseObjectList = query.find();
 
-                    // Also get the current user's favorites from parse
-                    ParseQuery<ParseObject> favorites_query = new ParseQuery<ParseObject>(
-                            "Favorites");
-                    favorites_query.include("recipeId");
-                    favorites_query.whereEqualTo("userId", current_user);
-                    List<ParseObject> favoriteList = favorites_query.find();
-                    ArrayList<String> favoriteIdList = new ArrayList<>();
-                    for (ParseObject favorite : favoriteList) {
-                        Recipe recipe = (Recipe) favorite.get("recipeId");
+                // Also get the current user's favorites from parse
+                ParseQuery<ParseObject> favorites_query = new ParseQuery<ParseObject>(
+                        "Favorites");
+                favorites_query.include("recipeId");
+                favorites_query.whereEqualTo("userId", current_user);
+                List<ParseObject> favoriteList = favorites_query.find();
+                ArrayList<String> favoriteIdList = new ArrayList<>();
+                for (ParseObject favorite : favoriteList) {
+                    Recipe recipe = (Recipe) favorite.get("recipeId");
+                    if (recipe != null) {
+                        Log.d("Recipe ID", recipe.getObjectId() + " ");
                         favoriteIdList.add(recipe.getObjectId());
                     }
-
-                    for (ParseObject recipe : parseObjectList) {
-                        // use the parse object to create a java object
-                        ParseFile image = (ParseFile) recipe.getParseFile("image");
-                        Recipe recipeItem = new Recipe();
-                        recipeItem.setId(recipe.getObjectId());
-                        recipeItem.setAuthor(recipe.getParseUser("author"));
-                        recipeItem.setTitle((String) recipe.get("title"));
-                        recipeItem.setDescription((String) recipe.get("description"));
-                        recipeItem.setRating((String) recipe.get("rating"));
-                        recipeItem.setImageFile(image);
-                        recipeItem.setFavorite(favoriteIdList.contains(recipeItem.getId()));
-                        List<String> ingredientList = recipe.getList("ingredients");
-                        recipeItem.setIngredients(ingredientList);
-                        recipeList.add(recipeItem);
-                    }
-                } catch (ParseException e) {
-                    Log.e("Error", e.getMessage());
-                    e.printStackTrace();
                 }
+
+                for (ParseObject recipeObject : parseObjectList) {
+                    Recipe recipe = (Recipe) recipeObject;
+                    Log.d("Recipe object ID",recipeObject.getObjectId());
+                    recipe.setFavorite(favoriteIdList.contains(recipeObject.getObjectId()));
+                    recipe.getAvg_Rating();
+                    recipeList.add(recipe);
+                }
+                // sort by average rating
+                Collections.sort(recipeList,Recipe.COMPARE_BY_RATING);
+            } catch (ParseException e) {
+                Log.e("Error", e.getMessage());
+                e.printStackTrace();
             }
             return null;
 
@@ -153,8 +159,9 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
             loadingLayout.setVisibility(View.GONE);
             // Locate the listview in listview_main.xml
             listview = (ListView) view.findViewById(R.id.listView);
+
             // Pass the results into ListViewAdapter.java
-            adapter = new ListViewAdapter(getActivity(),R.layout.list_item_style,
+            adapter = new ListViewAdapter(myActivity,R.layout.list_item_style,
                     recipeList);
             // Binds the Adapter to the ListView
             listview.setAdapter(adapter);

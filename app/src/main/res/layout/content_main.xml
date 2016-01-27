@@ -9,6 +9,6 @@
     tools:showIn="@layout/app_bar_main"
     android:id="@+id/frag_holder"
     android:orientation="vertical"
-    android:background="#fefcef">
+    android:background="#FEFEFE">
 
 </LinearLayout>

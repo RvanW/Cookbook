@@ -7,6 +7,7 @@ import com.parse.ParseUser;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -16,12 +17,18 @@ import java.util.List;
 public class Recipe extends ParseObject implements Serializable {
 
     private boolean favorite;
+    public float avg_rating;
 
     public Recipe() {
         // A default constructor is required.
     }
+
+    public ParseObject getPointer(){
+        return ParseObject.createWithoutData("Recipe", this.getId());
+    }
+
     public String getId() {
-        return getString("objectId");
+        return getObjectId();
     }
 
     public void setId(String id) {
@@ -52,12 +59,15 @@ public class Recipe extends ParseObject implements Serializable {
         put("author", user);
     }
 
-    public String getRating() {
-        return getString("rating");
-    }
-
-    public void setRating(String rating) {
-        put("rating", rating);
+    public Float getAvg_Rating() {
+        Number total = getNumber("totalRating");
+        Number number_ratings = getNumber("numberOfRatings");
+        if (total == null || number_ratings == null ||
+                number_ratings.floatValue() == 0) {
+            return (float) 0;
+        }
+        avg_rating = Math.round((total.floatValue() / number_ratings.floatValue())*2)/2f;
+        return avg_rating;
     }
 
     public ParseFile getImageFile() {
@@ -91,4 +101,10 @@ public class Recipe extends ParseObject implements Serializable {
         if (ingredientsList != null)
             put("ingredients", ingredientsList);
     }
+
+    public static Comparator<Recipe> COMPARE_BY_RATING = new Comparator<Recipe>() {
+        public int compare(Recipe one, Recipe other) {
+            return one.avg_rating < other.avg_rating ? +1 : one.avg_rating > other.avg_rating ? -1 : 0;
+        }
+    };
 }

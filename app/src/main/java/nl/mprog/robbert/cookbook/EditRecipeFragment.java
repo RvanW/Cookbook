@@ -1,7 +1,6 @@
 package nl.mprog.robbert.cookbook;
 
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
@@ -12,10 +11,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -24,59 +21,48 @@ import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.inthecheesefactory.thecheeselibrary.fragment.support.v4.app.StatedFragment;
-import com.parse.DeleteCallback;
 import com.parse.GetCallback;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseImageView;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
-import com.parse.ParseImageView;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 
-
-public class AddRecipeFragment extends StatedFragment implements View.OnClickListener, View.OnTouchListener {
+public class EditRecipeFragment extends StatedFragment implements View.OnClickListener, View.OnTouchListener {
     private static final int SELECT_FILE = 1;
     private static final int REQUEST_CAMERA = 0;
     private Recipe mRecipe;
+    private ParseObject parseRecipe;
     ParseImageView imageView;
 
     View view;
 
-    public AddRecipeFragment() {
+    public EditRecipeFragment() {
         // required empty constructor
     }
 
-    public static AddRecipeFragment newInstance(Recipe recipe) {
+    public static EditRecipeFragment newInstance(Recipe recipe) {
         Bundle args = new Bundle();
         args.putSerializable("recipe",recipe);
-        AddRecipeFragment fragment = new AddRecipeFragment();
+        EditRecipeFragment fragment = new EditRecipeFragment();
         fragment.setArguments(args);
         return fragment;
     }
@@ -111,78 +97,24 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
             mRecipe = (Recipe) getArguments().getSerializable("recipe");
             ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
                     "Recipe");
-            query.whereEqualTo("objectId",mRecipe.getObjectId());
+            query.whereEqualTo("objectId",mRecipe.getId());
             query.getFirstInBackground(new GetCallback<ParseObject>() {
                 @Override
                 public void done(ParseObject object, ParseException e) {
                     if (e==null) {
                         mRecipe = (Recipe) object;
-                        if (mRecipe.getAuthor() == ParseUser.getCurrentUser()) {
-                            setHasOptionsMenu(true);
-                            getActivity().setTitle("Edit recipe");
-                        }
+                        Log.d("EditRecipeFragment DONE","Found recipe");
                     }
                     else {
-                        Log.d("EditRecipeFragment",e.getMessage());
+                        Log.d("EditRecipeFragment ERROR",e.getMessage());
                     }
                 }
             });
+
         }
         else {
             mRecipe = new Recipe();
         }
-    }
-
-    @Override
-    public void onCreateOptionsMenu(
-            Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.fragment_edit_recipe, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // handle item selection
-        switch (item.getItemId()) {
-            case R.id.delete_item:
-                deleteDialog();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    private void deleteDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-        builder.setTitle("Delete recipe")
-                .setMessage("Are you sure you wish to delete everything associated with this recipe? \n Warning: this is action is irreversible!");
-        // Add the buttons
-        builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                mRecipe.deleteInBackground(new DeleteCallback() {
-                    @Override
-                    public void done(ParseException e) {
-                        if (e==null) {
-                            Fragment fragment = new MyRecipesFragment();
-                            // Insert the fragment by replacing any existing fragment
-                            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                            fragmentManager.beginTransaction()
-                                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                                    .replace(R.id.frag_holder, fragment)
-                                    .commit();
-                        }
-                    }
-                });
-            }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User cancelled the dialog
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
     }
 
     @Override
@@ -193,7 +125,8 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
         // set click listener for save button
         Button saveButton = (Button) view.findViewById(R.id.save);
         saveButton.setOnClickListener(this);
-        getActivity().setTitle("New recipe");
+        getActivity().setTitle("Edit recipe");
+        // highlight the current navigation item
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(1).setChecked(true);
 
@@ -205,29 +138,16 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
             nav_logo.setTint(color);
             toolbar.setLogo(nav_logo);
         }
+        //get the image view
         if (mRecipe != null) {
             EditText title = (EditText) view.findViewById(R.id.newTitel);
             title.setText(mRecipe.getTitle());
             EditText description = (EditText) view.findViewById(R.id.newDescription);
             description.setText(mRecipe.getDescription());
-            if (mRecipe.getPublic()) {
-                CheckBox checkBox = (CheckBox) view.findViewById(R.id.savePublic);
-                checkBox.setChecked(true);
-            }
 
-            // check if there are ingredients to be listed
-            if (mRecipe.getIngredients() != null) {
-                String htmlString = "";
-                for (String ingredient : mRecipe.getIngredients()) {
-                    htmlString += ingredient + "\n";
-                }
-                if (!Objects.equals(htmlString, "")) {
-                    TextView ingredients = (TextView) view.findViewById(R.id.newIngredients);
-                    ingredients.setText(htmlString);
-                }
-            }
 
-            // set the imageview if there's an image
+
+            // load the image in the imageview
             imageView = (ParseImageView) view.findViewById(R.id.imageUpload);
             if (mRecipe.getImageFile() != null) {
                 imageView.setParseFile(mRecipe.getImageFile());
@@ -259,6 +179,7 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
             EditText description = (EditText) view.findViewById(R.id.newDescription);
             mRecipe.setDescription(description.getText().toString());
 
+
             EditText ingredients = (EditText) view.findViewById(R.id.newIngredients);
             String[] ingredientString = ingredients.getText().toString().split("[\\r\\n]+");
             mRecipe.setIngredients(Arrays.asList(ingredientString));
@@ -277,7 +198,7 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
                         // Insert the fragment by replacing any existing fragment
                         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                         fragmentManager.beginTransaction()
-                                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                                .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left)
                                 .replace(R.id.frag_holder, fragment)
                                 .commit();
 

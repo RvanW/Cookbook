@@ -88,32 +88,24 @@ public class FavoritesFragment extends Fragment implements AdapterView.OnItemCli
         protected Void doInBackground(Void... params) {
             // Create the array
             recipeList = new ArrayList<Recipe>();
-            try {
-                // Locate the class table named "Recipe" in Parse.com
-                ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
-                        "Favorites");
-                query.include("recipeId");
-                query.include("userId");
-                query.whereEqualTo("userId",user);
+
+            // Locate the class table named "Favorites" in Parse.com
+            ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+                    "Favorites");
+            query.include("recipeId");
+            query.include("userId");
+            query.whereEqualTo("userId",user);
 //                // sort by rating
 //                query.orderByAscending("rating");
 //                query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
+            try {
                 parseObjectList = query.find();
                 for (ParseObject favorite : parseObjectList) {
-                    ParseObject recipePointer = (ParseObject) favorite.get("recipeId");
-                    // use the parse object to create a java object
-                    ParseFile image = (ParseFile) recipePointer.getParseFile("image");
-                    Recipe recipeItem = new Recipe();
-                    recipeItem.setId(recipePointer.getObjectId());
-                    recipeItem.setAuthor((ParseUser) recipePointer.get("author"));
-                    recipeItem.setTitle((String) recipePointer.get("title"));
-                    recipeItem.setDescription((String) recipePointer.get("description"));
-                    recipeItem.setRating((String) recipePointer.get("rating"));
-                    recipeItem.setImageFile(image);
-                    recipeItem.setFavorite(true);
-                    List<String> ingredientList = recipeItem.getList("ingredients");
-                    recipeItem.setIngredients(ingredientList);
-                    recipeList.add(recipeItem);
+                    Recipe recipePointer = (Recipe) favorite.get("recipeId");
+                    if (recipePointer != null) {
+                        recipePointer.setFavorite(true);
+                        recipeList.add(recipePointer);
+                    }
                 }
             } catch (ParseException e) {
                 Log.e("Error", e.getMessage());

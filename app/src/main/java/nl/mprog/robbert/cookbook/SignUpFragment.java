@@ -71,6 +71,7 @@ public class SignUpFragment extends Fragment implements View.OnClickListener {
     private void signUp() {
         EditText username_edittext = (EditText) view.findViewById(R.id.username);
         String username = username_edittext.getText().toString().trim();
+        String username_cap = username.substring(0,1).toUpperCase() + username.substring(1).toLowerCase();
         EditText password_edittext = (EditText) view.findViewById(R.id.password1);
         String password = password_edittext.getText().toString().trim();
         EditText confirm_edittext = (EditText) view.findViewById(R.id.password2);
@@ -103,7 +104,7 @@ public class SignUpFragment extends Fragment implements View.OnClickListener {
         }
         else {
             ParseUser user = new ParseUser();
-            user.setUsername(username);
+            user.setUsername(username_cap);
             user.setPassword(password);
             // Call the Parse signup method
             user.signUpInBackground(new SignUpCallback() {

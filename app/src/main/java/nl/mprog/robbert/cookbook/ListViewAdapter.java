@@ -66,7 +66,7 @@ public class ListViewAdapter extends ArrayAdapter<Recipe> {
         Recipe item = data.get(position);
         holder.txtTitle.setText(item.getTitle());
         holder.description.setText(item.getDescription());
-        holder.rating.setText(item.getRating());
+        holder.rating.setText(String.valueOf(item.getAvg_Rating()));
         holder.author.setText(item.getAuthor().getUsername());
         holder.heart.setImageResource(item.isFavorite() ? R.drawable.heart : R.drawable.heart_outline);
         if (item.getImageFile() != null) {
