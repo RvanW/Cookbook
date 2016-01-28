@@ -171,8 +171,13 @@ public class DetailsFragment extends Fragment implements CompoundButton.OnChecke
             // check if there are ingredients to be listed
             if (mRecipe.getIngredients() != null) {
                 String htmlString = "";
+                boolean first = true;
                 for (String ingredient : mRecipe.getIngredients()) {
-                    htmlString += "&#8226;" + ingredient + "<br/>";
+                    if (!first) {
+                        htmlString += "<br/>";
+                    }
+                    htmlString += "&#8226;" + ingredient;
+                    first = false;
                 }
                 if (!Objects.equals(htmlString, "")) {
                     TextView ingredients = (TextView) view.findViewById(R.id.detail_ingredients);
@@ -180,7 +185,7 @@ public class DetailsFragment extends Fragment implements CompoundButton.OnChecke
                 }
             }
 
-            if (mRecipe.getAvg_Rating() != null) {
+            if (mRecipe.get("numberOfRatings") != null) {
                 TextView ratingText = (TextView) view.findViewById(R.id.detail_rating);
                 ratingText.setText(String.valueOf(mRecipe.getAvg_Rating()));
                 TextView amountOfRatingsText = (TextView) view.findViewById(R.id.detail_ratings_amount);
@@ -260,10 +265,9 @@ public class DetailsFragment extends Fragment implements CompoundButton.OnChecke
             last_rating = current_user_rating.getNumber("rating");
         }
         else {
-            mRecipe.increment("numberOfRatings");
+            mRecipe.increment("numberOfRatings"); // otherwise it is a new rating
             current_user_rating = new ParseObject("Rating");
         }
-        final Number final_last_rating = last_rating;
 
         current_user_rating.put("rating", rating);
         current_user_rating.put("recipeId", mRecipe);
@@ -273,13 +277,11 @@ public class DetailsFragment extends Fragment implements CompoundButton.OnChecke
             public void done(ParseException e) {
                 if (e != null) {
                     Log.e("error saving rating", e.getMessage());
-                } else {
-
                 }
             }
         });
-        Log.e("Rating",rating + "," + final_last_rating);
-        mRecipe.increment("totalRating", rating.floatValue() - final_last_rating.floatValue());
+        Log.e("Rating",rating + "," + last_rating);
+        mRecipe.increment("totalRating", rating.floatValue() - last_rating.floatValue());
         mRecipe.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
