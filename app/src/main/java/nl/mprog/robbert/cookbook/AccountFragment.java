@@ -7,10 +7,7 @@ import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +16,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.parse.LogInCallback;
 import com.parse.LogOutCallback;
 import com.parse.ParseException;
 import com.parse.ParseUser;
@@ -35,12 +31,11 @@ public class AccountFragment extends Fragment implements View.OnClickListener {
         // Required empty public constructor
     }
 
-    View view;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        view = inflater.inflate(R.layout.fragment_account, container, false);
+        View view = inflater.inflate(R.layout.fragment_account, container, false);
         getActivity().setTitle("Account");
 
         // Layout depends on whether user is logged in
@@ -84,17 +79,14 @@ public class AccountFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
     public void onClick(View v) {
         Fragment fragment = null;
         switch(v.getId()) {
-            case R.id.signUpButton: fragment = new SignUpFragment();
+            case R.id.signUpButton:
+                fragment = new SignUpFragment();
                 break;
-            case R.id.loginButton: fragment = new LoginFragment();
+            case R.id.loginButton:
+                fragment = new LoginFragment();
                 break;
             case R.id.logOutButton:
                 logOut();

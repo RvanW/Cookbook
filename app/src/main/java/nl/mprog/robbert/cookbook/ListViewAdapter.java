@@ -1,37 +1,29 @@
 package nl.mprog.robbert.cookbook;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Created by Robbert on 12-1-2016.
+ * Created by Robbert van Waardhuizen (10543147) on 12-1-2016.
+ * Project for University of Amsterdam
  */
 import android.app.Activity;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseImageView;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.ParseUser;
 
-public class ListViewAdapter extends ArrayAdapter<Recipe> {
-    Context context;
-    int layoutResourceId;
-    ArrayList<Recipe> data = new ArrayList<Recipe>();
+class ListViewAdapter extends ArrayAdapter<Recipe> {
+    private final Context context;
+    private final int layoutResourceId;
+    private ArrayList<Recipe> data = new ArrayList<>();
 
     public ListViewAdapter(Context context, int layoutResourceId,
                            ArrayList<Recipe> data) {
@@ -44,7 +36,7 @@ public class ListViewAdapter extends ArrayAdapter<Recipe> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
-        RecordHolder holder = null;
+        RecordHolder holder;
 
         if (row == null) {
             LayoutInflater inflater = ((Activity) context).getLayoutInflater();

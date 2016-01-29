@@ -6,7 +6,8 @@ import com.parse.Parse;
 import com.parse.ParseObject;
 
 /**
- * Created by Robbert on 10-1-2016.
+ * Created by Robbert van Waardhuizen (10543147) on 10-1-2016.
+ * Project for University of Amsterdam
  */
 public class ParseApplication extends Application {
     public void onCreate() {

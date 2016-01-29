@@ -1,7 +1,6 @@
 package nl.mprog.robbert.cookbook;
 
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
@@ -12,16 +11,13 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,8 +29,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,12 +45,7 @@ import com.parse.SaveCallback;
 import com.parse.ParseImageView;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 
@@ -65,9 +54,9 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
     private static final int SELECT_FILE = 1;
     private static final int REQUEST_CAMERA = 0;
     private Recipe mRecipe;
-    ParseImageView imageView;
+    private ParseImageView imageView;
 
-    View view;
+    private View view;
 
     public AddRecipeFragment() {
         // required empty constructor
@@ -81,6 +70,7 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
         return fragment;
     }
 
+    // these functions make sure the image stays visible after screen rotations
     @Override
     protected void onSaveState(Bundle outState) {
         super.onSaveState(outState);
@@ -92,6 +82,7 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
         super.onRestoreState(savedInstanceState);
         // For example:
         mRecipe = (Recipe) savedInstanceState.getSerializable("recipe");
+        assert mRecipe != null;
         if (mRecipe.getImageFile() != null) {
             imageView.setParseFile(mRecipe.getImageFile());
             imageView.loadInBackground(new GetDataCallback() {
@@ -109,7 +100,8 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mRecipe = (Recipe) getArguments().getSerializable("recipe");
-            ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+            // get the recipe online and update if possible
+            ParseQuery<ParseObject> query = new ParseQuery<>(
                     "Recipe");
             query.whereEqualTo("objectId",mRecipe.getObjectId());
             query.getFirstInBackground(new GetCallback<ParseObject>() {
@@ -141,7 +133,7 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // handle item selection
+        // handle action bar item selection
         switch (item.getItemId()) {
             case R.id.delete_item:
                 deleteDialog();
@@ -153,7 +145,6 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
 
     private void deleteDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
         builder.setTitle("Delete recipe")
                 .setMessage("Are you sure you wish to delete everything associated with this recipe? \n Warning: this is action is irreversible!");
         // Add the buttons
@@ -180,7 +171,6 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
                 // User cancelled the dialog
             }
         });
-
         AlertDialog dialog = builder.create();
         dialog.show();
     }
@@ -407,17 +397,7 @@ public class AddRecipeFragment extends StatedFragment implements View.OnClickLis
         }
     }
 
-
-
-//    // convert from bitmap to byte array
-//    public byte[] getBytesFromBitmap(Bitmap bitmap) {
-//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//        bitmap.compress(CompressFormat.JPEG, 70, stream);
-//        return stream.toByteArray();
-//    }
-
-    // convert bitmap to Parse file.
-    public ParseFile conversionBitmapParseFile(Bitmap imageBitmap){
+    private ParseFile conversionBitmapParseFile(Bitmap imageBitmap){
         ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
         imageBitmap.compress(Bitmap.CompressFormat.PNG,100,byteArrayOutputStream);
         byte[] imageByte = byteArrayOutputStream.toByteArray();

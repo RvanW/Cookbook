@@ -4,7 +4,6 @@ package nl.mprog.robbert.cookbook;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.Toolbar;
@@ -32,7 +31,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         // Required empty public constructor
     }
 
-    View view;
+    private View view;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -68,7 +67,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    public void logIn() {
+    private void logIn() {
         EditText username_et = (EditText) view.findViewById(R.id.username);
         String username = username_et.getText().toString().trim();
         String username_cap = username.substring(0,1).toUpperCase() + username.substring(1).toLowerCase();

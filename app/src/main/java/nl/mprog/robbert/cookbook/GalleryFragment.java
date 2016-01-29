@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,10 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
-import com.parse.GetCallback;
-import com.parse.Parse;
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -36,19 +32,16 @@ import java.util.List;
 
 public class GalleryFragment extends Fragment implements AdapterView.OnItemClickListener {
     // initialize variables
-    ArrayList<Recipe> recipeList;
-    List<ParseObject> parseObjectList;
-    ListView listview;
-    ListAdapter adapter;
-    View view;
+    private ArrayList<Recipe> recipeList;
+    private View view;
 
-    GalleryFragment thisFragment = this;
+    private final GalleryFragment thisFragment = this;
 
     public GalleryFragment() {
         // Required empty public constructor
     }
 
-    Activity myActivity;
+    private Activity myActivity;
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -108,10 +101,10 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
 
             ParseUser current_user = ParseUser.getCurrentUser();
             // Create the array
-            recipeList = new ArrayList<Recipe>();
+            recipeList = new ArrayList<>();
             try {
                 // Locate the class table named "Recipe" in Parse.com
-                ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+                ParseQuery<ParseObject> query = new ParseQuery<>(
                         "Recipe");
                 // only public recipes
                 query.whereEqualTo("public", true);
@@ -119,10 +112,10 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
                 // sort by number of ratings
                 query.orderByDescending("numberOfRatings");
 //                query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
-                parseObjectList = query.find();
+                List<ParseObject> parseObjectList = query.find();
 
                 // Also get the current user's favorites from parse
-                ParseQuery<ParseObject> favorites_query = new ParseQuery<ParseObject>(
+                ParseQuery<ParseObject> favorites_query = new ParseQuery<>(
                         "Favorites");
                 favorites_query.include("recipeId");
                 favorites_query.whereEqualTo("userId", current_user);
@@ -158,10 +151,10 @@ public class GalleryFragment extends Fragment implements AdapterView.OnItemClick
             LinearLayout loadingLayout = (LinearLayout) view.findViewById(R.id.loading);
             loadingLayout.setVisibility(View.GONE);
             // Locate the listview in listview_main.xml
-            listview = (ListView) view.findViewById(R.id.listView);
+            ListView listview = (ListView) view.findViewById(R.id.listView);
 
             // Pass the results into ListViewAdapter.java
-            adapter = new ListViewAdapter(myActivity,R.layout.list_item_style,
+            ListAdapter adapter = new ListViewAdapter(myActivity, R.layout.list_item_style,
                     recipeList);
             // Binds the Adapter to the ListView
             listview.setAdapter(adapter);

@@ -21,7 +21,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -35,14 +34,11 @@ public class MyRecipesFragment extends Fragment implements AdapterView.OnItemCli
         // Required empty public constructor
     }
 
-    ArrayList<Recipe> recipeList;
-    List<ParseObject> parseObjectList;
-    ListView listview;
-    ListAdapter adapter;
-    Fragment thisFragment = this;
+    private ArrayList<Recipe> recipeList;
+    private final Fragment thisFragment = this;
 
-    View view;
-    Activity myActivity;
+    private View view;
+    private Activity myActivity;
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -100,12 +96,12 @@ public class MyRecipesFragment extends Fragment implements AdapterView.OnItemCli
 
         protected Void doInBackground(Void... params) {
             // Create the array
-            recipeList = new ArrayList<Recipe>();
+            recipeList = new ArrayList<>();
             ParseObject user = ParseUser.getCurrentUser();
             try {
 
                 // Get the current user's favorites from parse
-                ParseQuery<ParseObject> favorites_query = new ParseQuery<ParseObject>(
+                ParseQuery<ParseObject> favorites_query = new ParseQuery<>(
                         "Favorites");
                 favorites_query.include("recipeId");
                 favorites_query.whereEqualTo("userId", user);
@@ -119,14 +115,14 @@ public class MyRecipesFragment extends Fragment implements AdapterView.OnItemCli
                 }
 
                 // Locate the class table named "Recipe" in Parse.com
-                ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+                ParseQuery<ParseObject> query = new ParseQuery<>(
                         "Recipe");
                 query.include("author");
                 query.whereEqualTo("author", user);
                 // sort by rating
                 query.orderByDescending("rating");
 
-                parseObjectList = query.find();
+                List<ParseObject> parseObjectList = query.find();
                 for (ParseObject recipeObject : parseObjectList) {
                     Recipe recipe = (Recipe) recipeObject;
                     recipe.setFavorite(favoriteIdList.contains(recipeObject.getObjectId()));
@@ -145,9 +141,9 @@ public class MyRecipesFragment extends Fragment implements AdapterView.OnItemCli
             LinearLayout loadingLayout = (LinearLayout) view.findViewById(R.id.loading);
             loadingLayout.setVisibility(View.GONE);
             // Locate the listview in listview_main.xml
-            listview = (ListView) view.findViewById(R.id.listView);
+            ListView listview = (ListView) view.findViewById(R.id.listView);
             // Pass the results into ListViewAdapter.java
-            adapter = new ListViewAdapter(myActivity,R.layout.list_item_style,
+            ListAdapter adapter = new ListViewAdapter(myActivity, R.layout.list_item_style,
                     recipeList);
             // Binds the Adapter to the ListView
             listview.setAdapter(adapter);

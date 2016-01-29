@@ -8,7 +8,6 @@
         android:id="@+id/ly_root"
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#FEFEFE"
@@ -55,8 +54,6 @@
                     android:text="Title "
                     android:id="@+id/item_title"
                     android:contextClickable="false"
-                    android:layout_alignParentStart="false"
-                    android:layout_centerVertical="true"
                     android:textSize="18sp"
                     android:maxLines="1"
                     android:layout_weight="1"
@@ -66,8 +63,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/heartIcon"
-                    android:src="@drawable/heart_outline"
-                    android:layout_alignParentEnd="true" />
+                    android:src="@drawable/heart_outline" />
             </LinearLayout>
 
             <LinearLayout
@@ -83,8 +79,6 @@
                     android:textAppearance="?android:attr/textAppearanceLarge"
                     android:id="@+id/item_description"
                     android:contextClickable="false"
-                    android:layout_alignParentStart="false"
-                    android:layout_centerVertical="true"
                     android:textSize="13sp"
                     android:layout_weight="1"
                     android:layout_gravity="top"

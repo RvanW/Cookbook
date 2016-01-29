@@ -11,7 +11,7 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:weightSum="2">
 
         <com.parse.ParseImageView
@@ -49,7 +49,6 @@
                 android:textOff=""
                 android:focusable="false"
                 android:focusableInTouchMode="false"
-                android:layout_centerVertical="true"
                 style="?android:attr/borderlessButtonStyle"
                 android:checked="false"
                 android:layout_gravity="center_vertical"
@@ -182,7 +181,6 @@
                     android:text="0.0"
                     android:id="@+id/detail_rating"
                     android:layout_gravity="center"
-                    android:layout_weight="1"
                     android:layout_alignLeft="@+id/cookiexl"
                     android:layout_alignTop="@+id/cookiexl"
                     android:layout_alignRight="@+id/cookiexl"

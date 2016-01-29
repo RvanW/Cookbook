@@ -1,8 +1,6 @@
 package nl.mprog.robbert.cookbook;
 
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -16,39 +14,33 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.parse.DeleteCallback;
-import com.parse.FindCallback;
-import com.parse.GetCallback;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseImageView;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
-import java.util.List;
 import java.util.Objects;
 
 
 /**
- * A simple {@link Fragment} subclass.
+ * A simple fragment taking in a recipe object and displaying it
  */
 
 public class DetailsFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
-    View view;
-    Recipe mRecipe = null;
-    Recipe online_recipe;
-    ParseUser mUser = null;
-    ParseObject current_user_rating = null;
+    private View view;
+    private Recipe mRecipe = null;
+    private ParseUser mUser = null;
+    private ParseObject current_user_rating = null;
 
     public DetailsFragment() {
         // required empty constructor
@@ -68,7 +60,8 @@ public class DetailsFragment extends Fragment implements CompoundButton.OnChecke
         if (getArguments() != null) {
             mRecipe = (Recipe) getArguments().getSerializable("recipe");
             mUser = ParseUser.getCurrentUser();
-            ParseQuery<ParseObject> query = new ParseQuery<ParseObject>(
+            // query this recipe online
+            ParseQuery<ParseObject> query = new ParseQuery<>(
                     "Recipe");
             query.whereEqualTo("objectId",mRecipe.getObjectId());
             try {
@@ -77,26 +70,14 @@ public class DetailsFragment extends Fragment implements CompoundButton.OnChecke
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-//            query.getFirstInBackground(new GetCallback<ParseObject>() {
-//                @Override
-//                public void done(ParseObject object, ParseException e) {
-//                    if (e == null) {
-//                        mRecipe = (Recipe) object;
-//                        Log.d("EditRecipeFragment", "Found recipe");
-//                    } else {
-//                        Log.d("EditRecipeFragment", e.getMessage());
-//                    }
-//                }
-//            });
 
             if (mUser != null && mRecipe != null) {
                 if (mUser == mRecipe.getAuthor()) {
                     // enable the edit recipe button if the current user owns this recipe.
                     setHasOptionsMenu(true);
                 }
-
-
-                ParseQuery<ParseObject> rating_query = new ParseQuery<ParseObject>(
+                // if user is logged in, see if they have rated this recipe.
+                ParseQuery<ParseObject> rating_query = new ParseQuery<>(
                         "Rating");
                 rating_query.whereEqualTo("userId",ParseUser.getCurrentUser());
                 rating_query.whereEqualTo("recipeId", mRecipe);
@@ -208,7 +189,6 @@ public class DetailsFragment extends Fragment implements CompoundButton.OnChecke
                 ParseObject favorite = new ParseObject("Favorites");
                 favorite.put("userId", ParseUser.getCurrentUser());
                 favorite.put("recipeId", mRecipe);
-
                 favorite.saveInBackground(new SaveCallback() {
                     @Override
                     public void done(ParseException e) {
@@ -222,7 +202,7 @@ public class DetailsFragment extends Fragment implements CompoundButton.OnChecke
 
             } else {
                 // Delete the current user's favorites from parse
-                ParseQuery<ParseObject> favorites_query = new ParseQuery<ParseObject>(
+                ParseQuery<ParseObject> favorites_query = new ParseQuery<>(
                         "Favorites");
                 favorites_query.include("userId");
                 favorites_query.include("recipeId");

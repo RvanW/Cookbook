@@ -1,12 +1,8 @@
 package nl.mprog.robbert.cookbook;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -18,16 +14,10 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.parse.ParseFile;
 import com.parse.ParseUser;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
-    public NavigationView navigationView;
-    public GalleryFragment galleryFragment;
-    public AddRecipeFragment addRecipeFragment;
-
 
 
     @Override
@@ -52,7 +42,7 @@ public class MainActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         if (savedInstanceState == null) {
@@ -94,7 +84,7 @@ public class MainActivity extends AppCompatActivity
         Fragment fragment = null;
         String TAG = "";
         if (id == R.id.nav_gallery) {
-            galleryFragment = new GalleryFragment();
+            GalleryFragment galleryFragment = new GalleryFragment();
             fragment = galleryFragment;
             TAG = "gallery";
         }
@@ -105,7 +95,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(this,"Please login or sign up first to use this feature",Toast.LENGTH_SHORT).show();
         }
         else if (id == R.id.nav_camera) {
-            addRecipeFragment = AddRecipeFragment.newInstance(new Recipe());
+            AddRecipeFragment addRecipeFragment = AddRecipeFragment.newInstance(new Recipe());
             fragment = addRecipeFragment;
             TAG = "new_recipe";
         } else if (id == R.id.nav_myrecipes) {
@@ -144,12 +134,5 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // check if there's internet available
-    private boolean isNetworkConnected() {
-        ConnectivityManager cm = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo ni = cm.getActiveNetworkInfo();
-        return ni != null;
-    }
 }
 

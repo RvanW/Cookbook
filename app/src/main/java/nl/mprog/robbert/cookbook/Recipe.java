@@ -1,38 +1,29 @@
 package nl.mprog.robbert.cookbook;
-import com.parse.Parse;
 import com.parse.ParseClassName;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 /**
- * Created by Robbert on 10-1-2016.
+ * Created by Robbert van Waardhuizen (10543147) on 10-1-2016.
+ * Project for University of Amsterdam
  */
 @ParseClassName("Recipe")
-public class Recipe extends ParseObject implements Serializable {
+class Recipe extends ParseObject implements Serializable {
 
     private boolean favorite;
-    public float avg_rating;
+    private float avg_rating;
 
     public Recipe() {
         // A default constructor is required.
     }
 
-    public ParseObject getPointer(){
-        return ParseObject.createWithoutData("Recipe", this.getId());
-    }
-
     public String getId() {
         return getObjectId();
-    }
-
-    public void setId(String id) {
-        put("objectId", id);
     }
 
     public String getTitle() {
@@ -102,7 +93,7 @@ public class Recipe extends ParseObject implements Serializable {
             put("ingredients", ingredientsList);
     }
 
-    public static Comparator<Recipe> COMPARE_BY_RATING = new Comparator<Recipe>() {
+    public static final Comparator<Recipe> COMPARE_BY_RATING = new Comparator<Recipe>() {
         public int compare(Recipe one, Recipe other) {
             return one.avg_rating < other.avg_rating ? +1 : one.avg_rating > other.avg_rating ? -1 : 0;
         }
